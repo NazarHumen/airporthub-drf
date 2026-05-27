@@ -1,0 +1,16 @@
+[flake8]
+exclude =
+    .git,
+    .gitignore,
+    *.pot,
+    *.py[co],
+    __pycache__,
+    venv,
+    .env,
+    **migrations,
+    __init__.py,
+    auth.py,
+    rabbitmq.py,
+    .venv,
+    settings.py
+ignore = W391, W503
