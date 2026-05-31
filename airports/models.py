@@ -1,7 +1,5 @@
 from django.db import models
 
-from config import settings
-
 
 class Country(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -110,42 +108,4 @@ class Flight(models.Model):
             f"{self.flight_number}: "
             f"{self.departure_airport.code} - "
             f"{self.arrival_airport.code}"
-        )
-
-
-class Ticket(models.Model):
-    class Status(models.TextChoices):
-        BOOKED = "booked", "Booked"
-        PAID = "paid", "Paid"
-        CANCELLED = "cancelled", "Cancelled"
-        USED = "used", "Used"
-
-    flight = models.ForeignKey(
-        Flight,
-        on_delete=models.PROTECT,
-        related_name="tickets",
-    )
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
-        related_name="tickets",
-    )
-    seat_number = models.CharField(max_length=5)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(
-        max_length=20,
-        choices=Status.choices,
-        default=Status.BOOKED,
-    )
-    purchased_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["-purchased_at"]
-        unique_together = ["flight", "seat_number"]
-
-    def __str__(self):
-        return (
-            f"Ticket #{self.id}: "
-            f"{self.user.email} - "
-            f"{self.flight.flight_number}"
         )
