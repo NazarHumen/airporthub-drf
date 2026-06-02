@@ -38,5 +38,6 @@ urlpatterns = [
         name="redoc",
     ),
     path("", RedirectView.as_view(url="/api/docs/", permanent=False)),
-    path("api/", include("api.urls")),
+    path("api/aviation/", include("airports.urls")),
+    path("api/reservations/", include("tickets.urls")),
 ]
