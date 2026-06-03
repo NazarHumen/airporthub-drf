@@ -6,7 +6,7 @@ from config import settings
 
 class Ticket(models.Model):
     class Status(models.TextChoices):
-        BOOKED = "booked", "Booked"
+        PENDING = "pending", "Pending"
         PAID = "paid", "Paid"
         CANCELLED = "cancelled", "Cancelled"
         USED = "used", "Used"
@@ -21,12 +21,12 @@ class Ticket(models.Model):
         on_delete=models.PROTECT,
         related_name="tickets",
     )
-    seat_number = models.CharField(max_length=5)
+    seat_number = models.CharField(max_length=4)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
-        default=Status.BOOKED,
+        default=Status.PENDING,
     )
     purchased_at = models.DateTimeField(auto_now_add=True)
 
