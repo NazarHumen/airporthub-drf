@@ -17,7 +17,7 @@ class CountrySerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "Country code must contain only uppercase letters (e.g. UA)."
             )
-        return value.upper()
+        return value
 
 
 class AirportSerializer(serializers.ModelSerializer):
@@ -30,7 +30,7 @@ class AirportSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "Airport code must contain only uppercase letters (e.g. KBP)."
             )
-        return value.upper()
+        return value
 
 
 class AirlineSerializer(serializers.ModelSerializer):
@@ -43,7 +43,7 @@ class AirlineSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "Airline code must contain only uppercase letters (e.g. PS)."
             )
-        return value.upper()
+        return value
 
 
 class AirplaneSerializer(serializers.ModelSerializer):
