@@ -1,9 +1,12 @@
+from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
-from rest_framework import viewsets
+from rest_framework import status, viewsets
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from airports.filters import FlightFilter
 from airports.models import Airline, Airplane, Airport, Country, Flight
@@ -12,6 +15,7 @@ from airports.serializers import (
     AirplaneSerializer,
     AirportSerializer,
     CountrySerializer,
+    FlightListSerializer,
     FlightSerializer,
 )
 
@@ -23,9 +27,53 @@ class CountryViewSet(viewsets.ModelViewSet):
 
 
 @extend_schema(tags=["Airports"])
-class AirportViewSet(viewsets.ModelViewSet):
-    queryset = Airport.objects.select_related("country")
-    serializer_class = AirportSerializer
+class AirportListCreateView(APIView):
+    @extend_schema(responses=AirportSerializer(many=True))
+    def get(self, request):
+        airports = Airport.objects.select_related("country")
+        serializer = AirportSerializer(airports, many=True)
+        return Response(serializer.data)
+
+    @extend_schema(request=AirportSerializer, responses=AirportSerializer)
+    def post(self, request):
+        serializer = AirportSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+@extend_schema(tags=["Airports"])
+class AirportDetailView(APIView):
+    def get_object(self, pk):
+        return get_object_or_404(
+            Airport.objects.select_related("country"), pk=pk
+        )
+
+    @extend_schema(responses=AirportSerializer)
+    def get(self, request, pk):
+        serializer = AirportSerializer(self.get_object(pk))
+        return Response(serializer.data)
+
+    @extend_schema(request=AirportSerializer, responses=AirportSerializer)
+    def put(self, request, pk):
+        serializer = AirportSerializer(self.get_object(pk), data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @extend_schema(request=AirportSerializer, responses=AirportSerializer)
+    def patch(self, request, pk):
+        serializer = AirportSerializer(
+            self.get_object(pk), data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @extend_schema(responses=None)
+    def delete(self, request, pk):
+        self.get_object(pk).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @extend_schema(tags=["Airlines"])
@@ -49,6 +97,11 @@ class FlightListCreateView(ListCreateAPIView):
     )
     serializer_class = FlightSerializer
     filterset_class = FlightFilter
+
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return FlightListSerializer
+        return FlightSerializer
 
 
 @extend_schema(tags=["Flights"])

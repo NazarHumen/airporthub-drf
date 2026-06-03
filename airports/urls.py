@@ -4,7 +4,8 @@ from rest_framework.routers import DefaultRouter
 from airports.views import (
     AirlineViewSet,
     AirplaneViewSet,
-    AirportViewSet,
+    AirportDetailView,
+    AirportListCreateView,
     CountryViewSet,
     FlightDetailView,
     FlightListCreateView,
@@ -14,11 +15,16 @@ app_name = "airports"
 
 router = DefaultRouter()
 router.register("countries", CountryViewSet)
-router.register("airports", AirportViewSet)
 router.register("airlines", AirlineViewSet)
 router.register("airplanes", AirplaneViewSet)
 
 urlpatterns = [
+    path("airports/", AirportListCreateView.as_view(), name="airport-list"),
+    path(
+        "airports/<int:pk>/",
+        AirportDetailView.as_view(),
+        name="airport-detail",
+    ),
     path("flights/", FlightListCreateView.as_view(), name="flight-list"),
     path(
         "flights/<int:pk>/",
