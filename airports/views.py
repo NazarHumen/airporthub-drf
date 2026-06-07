@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 
 from airports.filters import FlightFilter
 from airports.models import Airline, Airplane, Airport, Country, Flight
+from airports.permissions import IsAdminRoleOrReadOnly
 from airports.serializers import (
     AirlineSerializer,
     AirplaneSerializer,
@@ -24,10 +25,13 @@ from airports.serializers import (
 class CountryViewSet(viewsets.ModelViewSet):
     queryset = Country.objects.all()
     serializer_class = CountrySerializer
+    permission_classes = [IsAdminRoleOrReadOnly]
 
 
 @extend_schema(tags=["Airports"])
 class AirportListCreateView(APIView):
+    permission_classes = [IsAdminRoleOrReadOnly]
+
     @extend_schema(responses=AirportSerializer(many=True))
     def get(self, request):
         airports = Airport.objects.select_related("country")
@@ -44,6 +48,8 @@ class AirportListCreateView(APIView):
 
 @extend_schema(tags=["Airports"])
 class AirportDetailView(APIView):
+    permission_classes = [IsAdminRoleOrReadOnly]
+
     def get_object(self, pk):
         return get_object_or_404(
             Airport.objects.select_related("country"), pk=pk
@@ -82,12 +88,14 @@ class AirlineViewSet(viewsets.ModelViewSet):
         "airports"
     )
     serializer_class = AirlineSerializer
+    permission_classes = [IsAdminRoleOrReadOnly]
 
 
 @extend_schema(tags=["Airplanes"])
 class AirplaneViewSet(viewsets.ModelViewSet):
     queryset = Airplane.objects.select_related("airline")
     serializer_class = AirplaneSerializer
+    permission_classes = [IsAdminRoleOrReadOnly]
 
 
 @extend_schema(tags=["Flights"])
@@ -97,6 +105,7 @@ class FlightListCreateView(ListCreateAPIView):
     )
     serializer_class = FlightSerializer
     filterset_class = FlightFilter
+    permission_classes = [IsAdminRoleOrReadOnly]
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -110,3 +119,4 @@ class FlightDetailView(RetrieveUpdateDestroyAPIView):
         "airplane", "departure_airport", "arrival_airport"
     )
     serializer_class = FlightSerializer
+    permission_classes = [IsAdminRoleOrReadOnly]
