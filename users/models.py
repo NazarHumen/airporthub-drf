@@ -16,5 +16,9 @@ class User(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
 
+    @property
+    def is_admin(self):
+        return self.role == self.Roles.ADMIN or self.is_superuser
+
     def __str__(self):
         return f"{self.email} - {self.role}"
