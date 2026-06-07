@@ -1,4 +1,9 @@
+import re
+import string
+
 from django.db import models
+
+SEAT_RE = re.compile(r"^([0-9]{1,3})([A-Z])$")
 
 
 class Country(models.Model):
@@ -53,7 +58,8 @@ class Airline(models.Model):
 class Airplane(models.Model):
     model = models.CharField(max_length=100)
     registration_number = models.CharField(max_length=20, unique=True)
-    capacity = models.PositiveIntegerField()
+    rows = models.PositiveSmallIntegerField()
+    seats_per_row = models.PositiveSmallIntegerField(default=6)
     airline = models.ForeignKey(
         Airline,
         on_delete=models.CASCADE,
@@ -62,6 +68,22 @@ class Airplane(models.Model):
 
     class Meta:
         ordering = ["airline__name", "model"]
+
+    @property
+    def capacity(self):
+        return self.rows * self.seats_per_row
+
+    @property
+    def seat_letters(self):
+        return string.ascii_uppercase[: self.seats_per_row]
+
+    def is_valid_seat(self, seat_number):
+        match = SEAT_RE.fullmatch(seat_number.upper())
+        if not match:
+            return False
+        row = int(match.group(1))
+        letter = match.group(2)
+        return 1 <= row <= self.rows and letter in self.seat_letters
 
     def __str__(self):
         return f"{self.model} ({self.registration_number})"
