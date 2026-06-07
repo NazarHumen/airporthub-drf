@@ -47,14 +47,31 @@ class AirlineSerializer(serializers.ModelSerializer):
 
 
 class AirplaneSerializer(serializers.ModelSerializer):
+    capacity = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = Airplane
-        fields = ["id", "model", "registration_number", "capacity", "airline"]
+        fields = [
+            "id",
+            "model",
+            "registration_number",
+            "rows",
+            "seats_per_row",
+            "capacity",
+            "airline",
+        ]
 
-    def validate_capacity(self, value):
+    def validate_rows(self, value):
         if value <= 0:
             raise serializers.ValidationError(
-                "Capacity must be greater than zero."
+                "Rows must be greater than zero."
+            )
+        return value
+
+    def validate_seats_per_row(self, value):
+        if not 2 <= value <= 6:
+            raise serializers.ValidationError(
+                "Seats per row must be between 2 and 6."
             )
         return value
 
