@@ -19,6 +19,7 @@ from airports.serializers import (
     FlightListSerializer,
     FlightSerializer,
 )
+from tools.pagination import CustomPageNumberPagination
 
 
 @extend_schema(tags=["Geography"])
@@ -31,12 +32,15 @@ class CountryViewSet(viewsets.ModelViewSet):
 @extend_schema(tags=["Airports"])
 class AirportListCreateView(APIView):
     permission_classes = [IsAdminRoleOrReadOnly]
+    pagination_class = CustomPageNumberPagination
 
     @extend_schema(responses=AirportSerializer(many=True))
     def get(self, request):
         airports = Airport.objects.select_related("country")
-        serializer = AirportSerializer(airports, many=True)
-        return Response(serializer.data)
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(airports, request, view=self)
+        serializer = AirportSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
     @extend_schema(request=AirportSerializer, responses=AirportSerializer)
     def post(self, request):
