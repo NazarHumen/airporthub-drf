@@ -77,6 +77,8 @@ class AirplaneSerializer(serializers.ModelSerializer):
 
 
 class FlightSerializer(serializers.ModelSerializer):
+    duration = serializers.SerializerMethodField()
+
     class Meta:
         model = Flight
         fields = [
@@ -87,9 +89,18 @@ class FlightSerializer(serializers.ModelSerializer):
             "arrival_airport",
             "departure_time",
             "arrival_time",
+            "duration",
             "status",
             "base_price",
         ]
+
+    def get_duration(self, flight) -> str:
+        # flight duration as "H:MM"
+        total_minutes = int(
+            (flight.arrival_time - flight.departure_time).total_seconds() // 60
+        )
+        hours, minutes = divmod(total_minutes, 60)
+        return f"{hours}:{minutes:02d}"
 
     def validate_base_price(self, value):
         if value <= 0:
@@ -127,9 +138,9 @@ class FlightSerializer(serializers.ModelSerializer):
             getattr(instance, "arrival_airport", None),
         )
         if (
-            departure_airport
-            and arrival_airport
-            and departure_airport == arrival_airport
+                departure_airport
+                and arrival_airport
+                and departure_airport == arrival_airport
         ):
             raise serializers.ValidationError(
                 "departure_airport and arrival_airport must be different."
@@ -145,6 +156,7 @@ class FlightListSerializer(serializers.ModelSerializer):
     arrival_airport = serializers.SlugRelatedField(
         slug_field="code", read_only=True
     )
+    duration = serializers.SerializerMethodField()
 
     class Meta:
         model = Flight
@@ -155,5 +167,14 @@ class FlightListSerializer(serializers.ModelSerializer):
             "departure_airport",
             "arrival_airport",
             "departure_time",
+            "duration",
             "status",
         ]
+
+    def get_duration(self, flight) -> str:
+        # flight duration as "H:MM"
+        total_minutes = int(
+            (flight.arrival_time - flight.departure_time).total_seconds() // 60
+        )
+        hours, minutes = divmod(total_minutes, 60)
+        return f"{hours}:{minutes:02d}"
