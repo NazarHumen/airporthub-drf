@@ -1,5 +1,8 @@
+import logging
+
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
+from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -12,6 +15,8 @@ from users.serializers import (
     UserSerializer,
 )
 
+logger = logging.getLogger("airporthub")
+
 
 @extend_schema(
     tags=["Auth"],
@@ -20,6 +25,7 @@ from users.serializers import (
 )
 class RegisterView(APIView):
     permission_classes = [AllowAny]
+    throttle_scope = "auth"
 
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
@@ -33,10 +39,24 @@ class RegisterView(APIView):
 )
 class LoginView(APIView):
     permission_classes = [AllowAny]
+    throttle_scope = "auth"
 
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except (ValidationError, AuthenticationFailed):
+            logger.warning(
+                "Failed login for %s from %s",
+                request.data.get("email"),
+                request.META.get("REMOTE_ADDR"),
+            )
+            raise
+        logger.info(
+            "User %s logged in from %s",
+            serializer.validated_data["user"]["id"],
+            request.META.get("REMOTE_ADDR"),
+        )
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 
@@ -57,7 +77,7 @@ class LogoutView(APIView):
 
 @extend_schema(tags=["Auth"])
 class TokenRefreshAuthView(TokenRefreshView):
-    pass
+    throttle_scope = "auth"
 
 
 @extend_schema(tags=["Auth"], responses=UserSerializer)
