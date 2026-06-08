@@ -18,6 +18,8 @@ class TicketSerializer(serializers.ModelSerializer):
         read_only=True,
     )
     user = serializers.PrimaryKeyRelatedField(read_only=True)
+    status = serializers.CharField(read_only=True)
+    reserved_until = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = Ticket
@@ -28,6 +30,7 @@ class TicketSerializer(serializers.ModelSerializer):
             "seat_number",
             "price",
             "status",
+            "reserved_until",
             "purchased_at",
         ]
 
@@ -40,6 +43,17 @@ class TicketSerializer(serializers.ModelSerializer):
         return value.upper()
 
     def validate(self, attrs):
+        instance = self.instance
+        if instance is not None and instance.status != Ticket.Status.PENDING:
+            locked = [
+                field
+                for field in ("flight", "seat_number")
+                if field in attrs and attrs[field] != getattr(instance, field)
+            ]
+            if locked:
+                raise serializers.ValidationError(
+                    f"A '{instance.status}' ticket can no longer be modified."
+                )
         flight = attrs.get("flight") or getattr(self.instance, "flight", None)
         seat_number = attrs.get("seat_number") or getattr(
             self.instance, "seat_number", None
@@ -65,9 +79,9 @@ class TicketSerializer(serializers.ModelSerializer):
         validated_data["price"] = validated_data["flight"].base_price
         return super().create(validated_data)
 
-    def validate_status(self, value):
-        if self.instance is None and value != Ticket.Status.PENDING:
-            raise serializers.ValidationError(
-                "New ticket must have status 'pending'."
-            )
-        return value
+    def update(self, instance, validated_data):
+        # Keep price in sync with the flight: changing the flight must
+        # re-derive the fare instead of carrying over the old one.
+        if "flight" in validated_data:
+            validated_data["price"] = validated_data["flight"].base_price
+        return super().update(instance, validated_data)
