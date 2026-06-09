@@ -138,9 +138,9 @@ class FlightSerializer(serializers.ModelSerializer):
             getattr(instance, "arrival_airport", None),
         )
         if (
-                departure_airport
-                and arrival_airport
-                and departure_airport == arrival_airport
+            departure_airport
+            and arrival_airport
+            and departure_airport == arrival_airport
         ):
             raise serializers.ValidationError(
                 "departure_airport and arrival_airport must be different."
