@@ -43,10 +43,12 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
     "django_filters",
+    "django_celery_beat",
     # Local apps
     "users",
     "airports",
     "tickets",
+    "orders",
 ]
 
 MIDDLEWARE = [
@@ -149,6 +151,16 @@ SPECTACULAR_SETTINGS = {
     "ENUM_NAME_OVERRIDES": {
         "TicketStatusEnum": "tickets.models.Ticket.Status",
         "FlightStatusEnum": "airports.models.Flight.Status",
+    },
+}
+
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
+
+CELERY_BEAT_SCHEDULE = {
+    "cancel-unpaid-orders": {
+        "task": "orders.tasks.cancel_unpaid_orders",
+        "schedule": timedelta(minutes=5),
     },
 }
 
