@@ -9,6 +9,7 @@ from airports.views import (
     CountryViewSet,
     FlightDetailView,
     FlightListCreateView,
+    FlightTakenSeatsView,
 )
 
 app_name = "airports"
@@ -30,6 +31,11 @@ urlpatterns = [
         "flights/<int:pk>/",
         FlightDetailView.as_view(),
         name="flight-detail",
+    ),
+    path(
+        "flights/<int:pk>/taken-seats/",
+        FlightTakenSeatsView.as_view(),
+        name="flight-taken-seats",
     ),
     path("", include(router.urls)),
 ]
