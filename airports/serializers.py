@@ -148,6 +148,17 @@ class FlightSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class FlightTakenSeatsSerializer(serializers.Serializer):
+    flight = serializers.IntegerField(read_only=True)
+    rows = serializers.IntegerField(read_only=True)
+    seats_per_row = serializers.IntegerField(read_only=True)
+    seat_letters = serializers.CharField(read_only=True)
+    taken_seats = serializers.ListField(
+        child=serializers.CharField(),
+        read_only=True,
+    )
+
+
 class FlightListSerializer(serializers.ModelSerializer):
     airplane = serializers.StringRelatedField()
     departure_airport = serializers.SlugRelatedField(
