@@ -18,7 +18,9 @@ from airports.serializers import (
     CountrySerializer,
     FlightListSerializer,
     FlightSerializer,
+    FlightTakenSeatsSerializer,
 )
+from tickets.models import Ticket
 from tools.pagination import CustomPageNumberPagination
 
 
@@ -124,3 +126,33 @@ class FlightDetailView(RetrieveUpdateDestroyAPIView):
     )
     serializer_class = FlightSerializer
     permission_classes = [IsAdminRoleOrReadOnly]
+
+
+@extend_schema(tags=["Flights"])
+class FlightTakenSeatsView(APIView):
+    """Seats already taken on a flight (active, non-cancelled tickets)."""
+
+    permission_classes = [IsAdminRoleOrReadOnly]
+
+    @extend_schema(responses=FlightTakenSeatsSerializer)
+    def get(self, request, pk):
+        flight = get_object_or_404(Flight, pk=pk)
+        rows = flight.airplane.rows
+        seats_per_row = flight.airplane.seats_per_row
+        seat_letters = flight.airplane.seat_letters
+        taken_seats = list(
+            Ticket.objects.filter(flight=flight)
+            .exclude(status=Ticket.Status.CANCELLED)
+            .order_by("seat_number")
+            .values_list("seat_number", flat=True)
+        )
+        serializer = FlightTakenSeatsSerializer(
+            {
+                "flight": flight.pk,
+                "rows": rows,
+                "seats_per_row": seats_per_row,
+                "seat_letters": seat_letters,
+                "taken_seats": taken_seats,
+            }
+        )
+        return Response(serializer.data)
