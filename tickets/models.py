@@ -1,11 +1,7 @@
-from datetime import timedelta
-
 from django.db import models
 
 from airports.models import Flight
 from config import settings
-
-RESERVATION_TTL = timedelta(minutes=15)
 
 
 class Ticket(models.Model):
@@ -15,6 +11,13 @@ class Ticket(models.Model):
         CANCELLED = "cancelled", "Cancelled"
         USED = "used", "Used"
 
+    order = models.ForeignKey(
+        "orders.Order",
+        on_delete=models.CASCADE,
+        related_name="tickets",
+        null=True,
+        blank=True,
+    )
     flight = models.ForeignKey(
         Flight,
         on_delete=models.PROTECT,
@@ -32,7 +35,6 @@ class Ticket(models.Model):
         choices=Status.choices,
         default=Status.PENDING,
     )
-    reserved_until = models.DateTimeField(null=True, blank=True)
     purchased_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
