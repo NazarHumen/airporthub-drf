@@ -40,5 +40,6 @@ urlpatterns = [
     path("", RedirectView.as_view(url="/api/docs/", permanent=False)),
     path("api/aviation/", include("airports.urls")),
     path("api/reservations/", include("tickets.urls")),
+    path("api/commerce/", include("orders.urls")),
     path("api/auth/", include("users.urls")),
 ]
